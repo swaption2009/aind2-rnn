@@ -14,18 +14,12 @@ def window_transform_series(series,window_size):
     y = []
     
     # my code block
-    n = 0
-    i = window_size
+    step_size = 1                                            # set step size at 1
     
-    if window_size >= len(series):              # check if window size is bigger than data size
-        print("Window size has to be less than series size.")
-    else:
-        while (n < len(series) - window_size):  # loop through data series less window size to stay inbound
-            y.append(series[i])                 # add output at i index
-            X.append(series[i-window_size:i])   # add inputs within window size before i index
-            i += 1
-            n += 1
-
+    for i in range(0, len(series) - window_size, step_size): # loop through the series from beginning
+        X.append(series[i:i + window_size])                  # add inputs from the series from i index to window size
+        y.append(series[i + window_size])                    # add output from the series at index (i + window size)
+    
     # reshape each 
     X = np.asarray(X)
     X.shape = (np.shape(X)[0:2])
@@ -36,27 +30,39 @@ def window_transform_series(series,window_size):
 
 
 # TODO: build an RNN to perform regression on our time series input/output data
+hidden_units = 200  # set hidden units variable
+
 def build_part1_RNN(step_size, window_size):
-    model = Sequential()                                         # initiate Keras RNN architecture 
-    model.add(LSTM(200, input_shape=(X.shape[1], X.shape[2])))   # add input layer with 200 nodes
-    model.add(Dense(58))                                         # add hidden fully connected layer with 58 nodes 
-    model.add(Dropout(0.3))                                      # add dropout to prevent overfitting
-    model.add(Dense(y.shape[1], activation='softmax'))           # add output layer with softmax activation
+    # initiate Keras RNN architecture
+    model = Sequential()
+    # add input layer with 200 hidden units and input shape of window size and 
+    model.add(LSTM(hidden_units, input_shape=(window_size, len(chars))))
+    # add fully connected hidden layer with number of unique characters
+    model.add(Dense(len(chars))
+    # add output layer with softmax activation layer
+    model.add(Activation('softmax'))
 
 
 ### TODO: list all unique characters in the text and remove any non-english ones
 def clean_text(text):
     # find all unique characters in the text
-    unique_chars = []
-    unique_chars = list(set(text))
-    print(unique_chars)
+    unique_chars = list(sorted(set(text)))
+
+    # loop through unique characters for inspection and removal in the next step
+    for i, c in enumerate(unique_chars):
+        print(str(i) + ":", str(c), end=" ")
 
     # remove as many non-english characters and character sequences as you can 
-    remove_chars = ['â', '$', 'é', 'è', '@', '&', '_', '(', ')', 'à', '%']
-    for i in remove_chars:
-        if i in text:
-            i = ''
-    
+    dropped_chars = unique_chars[1:10] + unique_chars[13:26] + unique_chars[27:28] + unique_chars[54:]
+    print("\n" + "characters to be removed are: ", dropped_chars)
+
+    # replace unwanted character to blank space
+    for i in dropped_chars:
+        text = text.replace(i,'')
+
+    # shorten any extra dead space created above
+    text = text.replace('  ',' ')
+        
 
 ### TODO: fill out the function below that transforms the input text and window-size into a set of input/output pairs for use with our RNN model
 def window_transform_text(text,window_size,step_size):
